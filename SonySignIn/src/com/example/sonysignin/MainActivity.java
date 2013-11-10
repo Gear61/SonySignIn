@@ -28,7 +28,7 @@ public class MainActivity extends Activity
 {
 	final Context context = this;
 	SignInsDataSource datasource = new SignInsDataSource(context);
-	
+
 	public void showDialog(String message, Context context)
 	{
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
@@ -51,14 +51,14 @@ public class MainActivity extends Activity
 		// show it
 		alertDialog.show();
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 	}
-	
+
 	public void clearForm()
 	{
 		EditText editName = (EditText) findViewById(R.id.name);
@@ -74,47 +74,47 @@ public class MainActivity extends Activity
 		editTimeIn.setText("");
 		editTimeOut.setText("");
 	}
-	
+
 	@SuppressLint("SimpleDateFormat")
 	public void signIn(View view)
 	{
 		// Hide keyboard after submitting sign in
 		InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 		inputManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-		
+
 		// Grab all user inputted parameters
 		EditText editName = (EditText) findViewById(R.id.name);
 		String name = editName.getText().toString();
-		
+
 		EditText editCompany = (EditText) findViewById(R.id.company);
 		String company = editCompany.getText().toString();
-		
+
 		EditText editSeeking = (EditText) findViewById(R.id.seeking);
 		String seeking = editSeeking.getText().toString();
-		
+
 		EditText editTimeIn = (EditText) findViewById(R.id.time_in);
 		String time_in = editTimeIn.getText().toString();
-		
+
 		EditText editTimeOut = (EditText) findViewById(R.id.time_out);
 		String time_out = editTimeOut.getText().toString();
-		
+
 		String currentTime = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").format(Calendar.getInstance().getTime());
-		
-		SignIn sign_in = new SignIn(name, company, seeking,
-									time_in, time_out, currentTime);
-		
+
+		SignIn sign_in = new SignIn(name, company, seeking, time_in, time_out, currentTime);
+
 		datasource.createSignIn(sign_in);
-		
+
 		showDialog("You have successfully signed in.", context);
 
 		// Clear entered in information
 		clearForm();
-		
+
 		setContentView(R.layout.activity_main);
 	}
-	
+
+	@SuppressLint("SimpleDateFormat")
 	public void sendData(View view)
-	{	
+	{
 		// Create folder in external storage for us to store things in
 		// Check if SD card is mounted
 		if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED))
@@ -125,89 +125,71 @@ public class MainActivity extends Activity
 				Dir.mkdirs(); // make directory
 			}
 		}
-		
+
 		// Create .csv file
 		if (Util.isExternalStorageWritable())
 		{
 			File file = new File(Environment.getExternalStorageDirectory().getPath() + "/SonySignIns/", "records.csv");
-			if (!file.exists())
+			
+			if (file.exists())
 			{
-				try
-				{
-					FileWriter fWriter = new FileWriter(Environment.getExternalStorageDirectory().getPath()
-							+ "/SonySignIns/records.csv");
-					
-					String allRecords = "";
-					
-					ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
-					for (int i = 0; i < sign_ins.size(); i++)
-					{
-						allRecords += sign_ins.get(i).getName() + ",";
-						allRecords += sign_ins.get(i).getCompany() + ",";
-						allRecords += sign_ins.get(i).getSeeking() + ",";
-						allRecords += sign_ins.get(i).getTimeIn() + ",";
-						allRecords += sign_ins.get(i).getTimeOut() + ",";
-						allRecords += sign_ins.get(i).getCurrent() + "\n";
-					}
-					
-					fWriter.write(allRecords);
-					fWriter.close();
-				}
-				catch (Exception e)
-				{
-					showDialog("Creating a .csv file in external memory failed.", context);
-					setContentView(R.layout.activity_main);
-					return;
-				}
+				file.delete();
 			}
-			
-			//MY CODE HURR
-			
-			
-			File root   = Environment.getExternalStorageDirectory();
-			if (root.canRead()) {
-			    File dir    =   new File (root.getAbsolutePath() + "/SonySignIn");
-			    file = new File(dir, "Records.csv");
-			    FileOutputStream out = null;
-			    try {
-			    	out = new FileOutputStream(file);
-			    } catch (FileNotFoundException e) {
-			    	System.out.println("ERROR: something bad happened when trying to read file! (inside email send method)");
-			    	e.printStackTrace();
-			    }
-			    try {
-			    	out.close();
-			    } catch (IOException e) {
-			    	System.out.println("ERROR: Something happened trying to close file! (in email send method)");
-			    }
+
+			try
+			{
+				FileWriter fWriter = new FileWriter(Environment.getExternalStorageDirectory().getPath()
+						+ "/SonySignIns/records.csv");
+
+				String allRecords = "";
+
+				ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
+				for (int i = 0; i < sign_ins.size(); i++)
+				{
+					allRecords += sign_ins.get(i).getName() + ",";
+					allRecords += sign_ins.get(i).getCompany() + ",";
+					allRecords += sign_ins.get(i).getSeeking() + ",";
+					allRecords += sign_ins.get(i).getTimeIn() + ",";
+					allRecords += sign_ins.get(i).getTimeOut() + ",";
+					allRecords += sign_ins.get(i).getCurrent() + "\n";
+				}
+
+				fWriter.write(allRecords);
+				fWriter.close();
 			}
+			catch (Exception e)
+			{
+				showDialog("Creating a .csv file in external memory failed.", context);
+				setContentView(R.layout.activity_main);
+				return;
+			}
+
+			// MY CODE HURR
+			
 			Uri u1 = null;
 			u1 = Uri.fromFile(file);
 
 			String currentTime = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").format(Calendar.getInstance().getTime());
-			
+
 			Intent sendIntent = new Intent(Intent.ACTION_SEND);
-			sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Sign-in Record as of " +currentTime);
+			sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Sign-in Record as of " + currentTime);
 			sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
 			sendIntent.setType("text/html");
 			startActivity(sendIntent);
-			
-			file.delete();
-			showDialog("You have successfully emailed yourself all of the stored data in this app.", context);
 		}
 	}
-	
+
 	public void deleteAll(View view)
 	{
 		datasource.deleteAll();
 		showDialog("You have successfully deleted all stored records.", context);
 	}
-	
+
 	public void Admin(View view)
 	{
 		setContentView(R.layout.admin);
 	}
-	
+
 	public void switchBack(View view)
 	{
 		setContentView(R.layout.activity_main);
