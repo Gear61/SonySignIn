@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.annotation.SuppressLint;
@@ -18,6 +19,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -158,6 +160,38 @@ public class MainActivity extends Activity
 					return;
 				}
 			}
+			
+			//MY CODE HURR
+			
+			
+			File root   = Environment.getExternalStorageDirectory();
+			if (root.canRead()) {
+			    File dir    =   new File (root.getAbsolutePath() + "/SonySignIn");
+			    file = new File(dir, "Records.csv");
+			    FileOutputStream out = null;
+			    try {
+			    	out = new FileOutputStream(file);
+			    } catch (FileNotFoundException e) {
+			    	System.out.println("ERROR: something bad happened when trying to read file! (inside email send method)");
+			    	e.printStackTrace();
+			    }
+			    try {
+			    	out.close();
+			    } catch (IOException e) {
+			    	System.out.println("ERROR: Something happened trying to close file! (in email send method)");
+			    }
+			}
+			Uri u1 = null;
+			u1 = Uri.fromFile(file);
+
+			String currentTime = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").format(Calendar.getInstance().getTime());
+			
+			Intent sendIntent = new Intent(Intent.ACTION_SEND);
+			sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Sign-in Record as of " +currentTime);
+			sendIntent.putExtra(Intent.EXTRA_STREAM, u1);
+			sendIntent.setType("text/html");
+			startActivity(sendIntent);
+			
 			file.delete();
 			showDialog("You have successfully emailed yourself all of the stored data in this app.", context);
 		}
