@@ -1,24 +1,21 @@
 package com.example.sonysignin;
 
-import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Calendar;
 import android.os.Bundle;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 
-public class MainActivity extends ListActivity
+public class MainActivity extends Activity
 {
 	final Context context = this;
-	CommentsDataSource datasource;
+	SignInsDataSource datasource = new SignInsDataSource(context);
 	
 	public void showDialog(String message, Context context)
 	{
@@ -48,96 +45,69 @@ public class MainActivity extends ListActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		datasource = new CommentsDataSource(this);
-		datasource.open();
-
-		ArrayList<Item> values = datasource.getAllItems();
-
-		// use the SimpleCursorAdapter to show the
-		// elements in a ListView
-		ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(this, android.R.layout.simple_list_item_1, values);
-		setListAdapter(adapter);
-	}
-
-	// Will be called via the onClick attribute
-	// of the buttons in main.xml
-	public void goToAddPage(View view)
-	{
-		// setContentView(R.layout.add_item);
 	}
 	
-	public void goToWatchlist(View view)
+	public void clearForm()
 	{
-		datasource.getAllItems();
+		EditText editName = (EditText) findViewById(R.id.name);
+		EditText editCompany = (EditText) findViewById(R.id.company);
+		EditText editSeeking = (EditText) findViewById(R.id.seeking);
+		EditText editTimeIn = (EditText) findViewById(R.id.time_in);
+		EditText editTimeOut = (EditText) findViewById(R.id.time_out);
+
+		// Clear entered in information
+		editName.setText("");
+		editCompany.setText("");
+		editSeeking.setText("");
+		editTimeIn.setText("");
+		editTimeOut.setText("");
 	}
 	
-	public void addItem(View view)
+	@SuppressLint("SimpleDateFormat")
+	public void signIn(View view)
 	{
-		EditText editName = (EditText) findViewById(R.id.item_name);
-		EditText editPrice = (EditText) findViewById(R.id.item_price);
+		EditText editName = (EditText) findViewById(R.id.name);
 		String name = editName.getText().toString();
-		double item_price = 0;
 		
-		try
-		{
-			item_price = Double.parseDouble(editPrice.getText().toString());
-		}	
-		catch(NumberFormatException e)
-		{
-			showDialog("Please enter a valid price.", context);
-			return;
-		}
+		EditText editCompany = (EditText) findViewById(R.id.company);
+		String company = editCompany.getText().toString();
 		
-		// If entered string is empty string or entirely white space, complain
-		if (name.trim().length() == 0)
-		{
-			showDialog("Please enter an item name.", context);
-			return;
-		}
-		if (item_price < 0)
-		{
-			showDialog("Please enter a non-negative item price.", context);
-			return;
-		}
+		EditText editSeeking = (EditText) findViewById(R.id.seeking);
+		String seeking = editSeeking.getText().toString();
 		
-		String stringPrice = editPrice.getText().toString();
-		int integerPlaces = stringPrice.indexOf('.');
-		if (integerPlaces != -1)
-		{
-			int decimalPlaces = stringPrice.length() - integerPlaces - 1;
-			if (decimalPlaces > 2)
-			{
-				showDialog("Please enter a cent amount that is 2 or less digits long.", context);
-				return;
-			}
-		}
+		EditText editTimeIn = (EditText) findViewById(R.id.time_in);
+		String time_in = editTimeIn.getText().toString();
 		
-		NumberFormat fmt = NumberFormat.getCurrencyInstance();
-		String formattedPrice = fmt.format(item_price);
+		EditText editTimeOut = (EditText) findViewById(R.id.time_out);
+		String time_out = editTimeOut.getText().toString();
 		
-		@SuppressWarnings("unchecked")
-		ArrayAdapter<Item> adapter = (ArrayAdapter<Item>) getListAdapter();
-		Item item = new Item(formattedPrice, name);
-		datasource.createItem(item);
-		adapter.add(item);
-		adapter.notifyDataSetChanged();
+		String currentTime = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").format(Calendar.getInstance().getTime());
 		
-		showDialog("Item successfully added to watchlist.", context);
+		SignIn sign_in = new SignIn(name, company, seeking,
+									time_in, time_out, currentTime);
+		
+		datasource.createSignIn(sign_in);
+		
+		showDialog("You have successfully signed in.", context);
+
+		// Clear entered in information
+		clearForm();
+		
 		setContentView(R.layout.activity_main);
 	}
 	
-	@Override
-	protected void onResume()
+	public void Admin(View view)
 	{
-		datasource.open();
-		super.onResume();
-	}
-
-	@Override
-	protected void onPause()
-	{
-		datasource.close();
-		super.onPause();
+		ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
+		for (int i = 0; i < sign_ins.size(); i++)
+		{
+			System.out.println("Name: " + sign_ins.get(i).getName());
+			System.out.println("Company: " + sign_ins.get(i).getCompany());
+			System.out.println("Seeking: " + sign_ins.get(i).getSeeking());
+			System.out.println("Time in: " + sign_ins.get(i).getTimeIn());
+			System.out.println("Time out: " + sign_ins.get(i).getTimeOut());
+			System.out.println("Current time: " + sign_ins.get(i).getCurrent());
+			System.out.println(" ");
+		}
 	}
 }

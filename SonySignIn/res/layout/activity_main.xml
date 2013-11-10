@@ -8,9 +8,68 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <TextView
-        android:layout_width="wrap_content"
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:hint="Name?" />
+
+    <requestFocus
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <EditText
+        android:id="@+id/seeking"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/name"
+        android:layout_below="@+id/name"
+        android:ems="10"
+        android:hint="Who are you here to see?" />
+
+    <EditText
+        android:id="@+id/company"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/seeking"
+        android:layout_below="@+id/seeking"
+        android:ems="10"
+        android:hint="Which company do you represent?" />
+
+    <EditText
+        android:id="@+id/time_in"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/company"
+        android:layout_below="@+id/company"
+        android:ems="10"
+        android:hint="Time in" />
+
+    <EditText
+        android:id="@+id/time_out"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/signin"
+        android:layout_below="@+id/time_in"
+        android:ems="10"
+        android:hint="Time out" />
+    
+    <Button
+        android:id="@+id/Admin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/signin"
+        android:layout_below="@+id/signin"
+        android:onClick="Admin"
+        android:text="Admin" />
+
+    <Button
+        android:id="@+id/signin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/time_in"
+        android:layout_below="@+id/time_out"
+        android:onClick="signIn"
+        android:text="Sign In" />
 
 </RelativeLayout>

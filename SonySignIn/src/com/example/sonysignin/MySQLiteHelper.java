@@ -8,22 +8,29 @@ import android.util.Log;
 public class MySQLiteHelper extends SQLiteOpenHelper
 {
 	// Table name
-	public static final String TABLE_NAME = "Items";
-	
+	public static final String TABLE_NAME = "Records";
+
 	// COLUMNS
 	// Item name column
 	public static final String COLUMN_NAME = "Name";
-	// Comment column
-	public static final String COLUMN_PRICE = "Desired_Price";
+	public static final String COLUMN_COMPANY = "Company";
+	public static final String COLUMN_SEEKING = "Seeking";
+	public static final String COLUMN_TIMEIN = "TimeIn";
+	public static final String COLUMN_TIMEOUT = "TimeOut";
+	public static final String COLUMN_CURRENT_TIME = "CurrentTime";
 
 	// Some random things fed to a super's method
 	private static final String DATABASE_NAME = "items.db";
 	private static final int DATABASE_VERSION = 1;
 
 	// Database creation sql statement
-	private static final String DATABASE_CREATE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_NAME
-			+ " TEXT PRIMARY KEY, " + COLUMN_PRICE + " TEXT);";
+	static final String DATABASE_CREATE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_NAME
+			+ " TEXT, " + COLUMN_COMPANY + " TEXT, " + COLUMN_SEEKING + " TEXT, " 
+			+ COLUMN_TIMEIN + " TEXT, " + COLUMN_TIMEOUT + " TEXT, " + COLUMN_CURRENT_TIME + " TEXT);";
+	
 
+	static final String DATABASE_DROP = "DROP TABLE " + TABLE_NAME;
+	
 	public MySQLiteHelper(Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -32,6 +39,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
 	@Override
 	public void onCreate(SQLiteDatabase database)
 	{
+		System.out.println(DATABASE_CREATE);
 		database.execSQL(DATABASE_CREATE);
 	}
 
