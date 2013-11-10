@@ -1,15 +1,25 @@
 package com.example.sonysignin;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+
 import android.os.Bundle;
+import android.os.Environment;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 public class MainActivity extends Activity
@@ -66,6 +76,11 @@ public class MainActivity extends Activity
 	@SuppressLint("SimpleDateFormat")
 	public void signIn(View view)
 	{
+		// Hide keyboard after submitting sign in
+		InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+		inputManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+		
+		// Grab all user inputted parameters
 		EditText editName = (EditText) findViewById(R.id.name);
 		String name = editName.getText().toString();
 		
@@ -96,18 +111,71 @@ public class MainActivity extends Activity
 		setContentView(R.layout.activity_main);
 	}
 	
+	public void sendData(View view)
+	{	
+		// Create folder in external storage for us to store things in
+		// Check if SD card is mounted
+		if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED))
+		{
+			File Dir = new File(android.os.Environment.getExternalStorageDirectory(), "SonySignIns");
+			if (!Dir.exists()) // if directory is not here
+			{
+				Dir.mkdirs(); // make directory
+			}
+		}
+		
+		// Create .csv file
+		if (Util.isExternalStorageWritable())
+		{
+			File file = new File(Environment.getExternalStorageDirectory().getPath() + "/SonySignIns/", "records.csv");
+			if (!file.exists())
+			{
+				try
+				{
+					FileWriter fWriter = new FileWriter(Environment.getExternalStorageDirectory().getPath()
+							+ "/SonySignIns/records.csv");
+					
+					String allRecords = "";
+					
+					ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
+					for (int i = 0; i < sign_ins.size(); i++)
+					{
+						allRecords += sign_ins.get(i).getName() + ",";
+						allRecords += sign_ins.get(i).getCompany() + ",";
+						allRecords += sign_ins.get(i).getSeeking() + ",";
+						allRecords += sign_ins.get(i).getTimeIn() + ",";
+						allRecords += sign_ins.get(i).getTimeOut() + ",";
+						allRecords += sign_ins.get(i).getCurrent() + "\n";
+					}
+					
+					fWriter.write(allRecords);
+					fWriter.close();
+				}
+				catch (Exception e)
+				{
+					showDialog("Creating a .csv file in external memory failed.", context);
+					setContentView(R.layout.activity_main);
+					return;
+				}
+			}
+			file.delete();
+			showDialog("You have successfully emailed yourself all of the stored data in this app.", context);
+		}
+	}
+	
+	public void deleteAll(View view)
+	{
+		datasource.deleteAll();
+		showDialog("You have successfully deleted all stored records.", context);
+	}
+	
 	public void Admin(View view)
 	{
-		ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
-		for (int i = 0; i < sign_ins.size(); i++)
-		{
-			System.out.println("Name: " + sign_ins.get(i).getName());
-			System.out.println("Company: " + sign_ins.get(i).getCompany());
-			System.out.println("Seeking: " + sign_ins.get(i).getSeeking());
-			System.out.println("Time in: " + sign_ins.get(i).getTimeIn());
-			System.out.println("Time out: " + sign_ins.get(i).getTimeOut());
-			System.out.println("Current time: " + sign_ins.get(i).getCurrent());
-			System.out.println(" ");
-		}
+		setContentView(R.layout.admin);
+	}
+	
+	public void switchBack(View view)
+	{
+		setContentView(R.layout.activity_main);
 	}
 }

@@ -57,9 +57,10 @@ public class SignInsDataSource
 		database.insert(MySQLiteHelper.TABLE_NAME, null, values);
 	}
 
-	public void deleteComment(SignIn durdle)
+	public void deleteAll()
 	{
-		return;
+		open();
+		database.delete(MySQLiteHelper.TABLE_NAME, null, null);
 	}
 
 	public ArrayList<SignIn> getAllSignIns()
