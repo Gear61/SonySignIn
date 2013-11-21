@@ -228,7 +228,7 @@ public class MainActivity extends Activity
 					allRecords += sign_ins.get(i).getCompany() + ",";
 					allRecords += sign_ins.get(i).getSeeking() + ",";
 					allRecords += sign_ins.get(i).getTimeIn() + ",";
-					allRecords += sign_ins.get(i).getTimeOut() + ",";
+					allRecords += sign_ins.get(i).getTimeOut() + "\n";
 				}
 
 				fWriter.write(allRecords);
