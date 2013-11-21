@@ -219,7 +219,7 @@ public class MainActivity extends Activity
 				String allRecords = "";
 
 				// Row defining each column
-				allRecords += "Name, Company, Seeking, Time In, Time Out\n";
+				allRecords += "Name,Company,Seeking,Time In,Time Out\n";
 
 				ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
 				for (int i = 0; i < sign_ins.size(); i++)
