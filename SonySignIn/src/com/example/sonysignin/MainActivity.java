@@ -61,6 +61,9 @@ public class MainActivity extends Activity
 		alertDialog.show();
 	}
 	
+	// Dialog that appears upon trying to checkout
+	// If yes is selected, the timeout for that record is set to current time and the item disappears from list
+	// If no is selected, nothing happens
 	public void showConfirmationDialog(String message, final Context context, final View view, final String item)
 	{
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
@@ -123,6 +126,7 @@ public class MainActivity extends Activity
 		setContentView(R.layout.activity_main);
 	}
 
+	// Function used to clear the form after sign in
 	public void clearForm()
 	{
 		EditText editName = (EditText) findViewById(R.id.name);
@@ -151,11 +155,28 @@ public class MainActivity extends Activity
 
 		EditText editSeeking = (EditText) findViewById(R.id.seeking);
 		String seeking = editSeeking.getText().toString();
+		
+		// If entered string is empty string or entirely white space, complain
+		if (name.trim().length() == 0)
+		{
+			showDialog("Please enter a name.", context);
+			return;
+		}
+		if (company.trim().length() == 0)
+		{
+			showDialog("Please tell us which company you represent.", context);
+			return;
+		}
+		if (seeking.trim().length() == 0)
+		{
+			showDialog("Please tell us who you came here to see.", context);
+			return;
+		}
 
-		String time_in = new SimpleDateFormat("MMM-dd-yyyy h:mm aa").format(Calendar.getInstance().getTime());
-
+		String time_in = Util.getCurrentTime();
 		SignIn sign_in = new SignIn(name, company, seeking, time_in, "NULL");
 
+		// Insert new sign in record into database
 		datasource.createSignIn(sign_in);
 
 		showDialog("You have successfully signed in.", context);
