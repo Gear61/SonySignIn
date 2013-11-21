@@ -8,7 +8,7 @@ import android.util.Log;
 public class MySQLiteHelper extends SQLiteOpenHelper
 {
 	// Table name
-	public static final String TABLE_NAME = "Records";
+	public static final String TABLE_NAME = "SignIns";
 
 	// COLUMNS
 	// Item name column
@@ -17,7 +17,6 @@ public class MySQLiteHelper extends SQLiteOpenHelper
 	public static final String COLUMN_SEEKING = "Seeking";
 	public static final String COLUMN_TIMEIN = "TimeIn";
 	public static final String COLUMN_TIMEOUT = "TimeOut";
-	public static final String COLUMN_CURRENT_TIME = "CurrentTime";
 
 	// Some random things fed to a super's method
 	private static final String DATABASE_NAME = "items.db";
@@ -26,7 +25,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper
 	// Database creation sql statement
 	static final String DATABASE_CREATE = "CREATE TABLE " + TABLE_NAME + "(" + COLUMN_NAME
 			+ " TEXT, " + COLUMN_COMPANY + " TEXT, " + COLUMN_SEEKING + " TEXT, " 
-			+ COLUMN_TIMEIN + " TEXT, " + COLUMN_TIMEOUT + " TEXT, " + COLUMN_CURRENT_TIME + " TEXT);";
+			+ COLUMN_TIMEIN + " TEXT, " + COLUMN_TIMEOUT + " TEXT);";
 	
 
 	static final String DATABASE_DROP = "DROP TABLE " + TABLE_NAME;

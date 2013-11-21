@@ -4,5 +4,6 @@
     <string name="app_name">Sony Sign In</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="instructions">To checkout, simply select the record which corresponds to you.</string>
 
 </resources>

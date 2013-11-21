@@ -1,12 +1,7 @@
 package com.example.sonysignin;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -17,17 +12,31 @@ import android.os.Environment;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TableLayout;
+import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class MainActivity extends Activity
 {
 	final Context context = this;
 	SignInsDataSource datasource = new SignInsDataSource(context);
+	boolean locked = true;
+	String revert = "";
+	StableArrayAdapter adapter;
+	ArrayList<String> list;
 
 	public void showDialog(String message, Context context)
 	{
@@ -51,6 +60,61 @@ public class MainActivity extends Activity
 		// show it
 		alertDialog.show();
 	}
+	
+	public void showConfirmationDialog(String message, final Context context, final View view, final String item)
+	{
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+
+		// set dialog message
+		alertDialogBuilder.setMessage(message).setCancelable(false)
+				.setPositiveButton("No", new DialogInterface.OnClickListener()
+				{
+					public void onClick(DialogInterface dialog, int whichButton)
+					{
+						dialog.dismiss();
+					}
+				}).setNegativeButton("Yes", new DialogInterface.OnClickListener()
+				{
+					public void onClick(final DialogInterface dialog, int id)
+					{
+						final SignIn signin = Util.parseData(item);
+						view.animate().setDuration(2000).alpha(0).withEndAction(new Runnable()
+						{
+							@SuppressLint("SimpleDateFormat")
+							@Override
+							public void run()
+							{
+								String time_out = Util.getCurrentTime();
+								
+								String query = "UPDATE " + MySQLiteHelper.TABLE_NAME;
+								query += " SET " + MySQLiteHelper.COLUMN_TIMEOUT + "=" + "\"" + time_out + "\"";
+								query += " WHERE " + MySQLiteHelper.COLUMN_TIMEIN + "=" + "\"" + signin.getTimeIn() + "\"";
+								query += " AND " + MySQLiteHelper.COLUMN_NAME + "=" + "\"" + signin.getName() + "\"";
+								query += " AND " + MySQLiteHelper.COLUMN_SEEKING + "=" + "\"" + signin.getSeeking() + "\"";
+								query += " AND " + MySQLiteHelper.COLUMN_COMPANY + "=" + "\"" + signin.getCompany() + "\"";
+								query += " AND " + MySQLiteHelper.COLUMN_TIMEOUT + "=" + "\"" + signin.getTimeOut() + "\"";
+								
+								System.out.println(query);
+								
+								datasource.execQuery(query);
+								
+								list.remove(item);
+								adapter.notifyDataSetChanged();
+								view.setAlpha(1);
+								dialog.cancel();
+								
+								showDialog("You have successfully checked out.", context);
+							}
+						});
+					}
+				});
+
+		// create alert dialog
+		AlertDialog alertDialog = alertDialogBuilder.create();
+
+		// show it
+		alertDialog.show();
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -64,15 +128,11 @@ public class MainActivity extends Activity
 		EditText editName = (EditText) findViewById(R.id.name);
 		EditText editCompany = (EditText) findViewById(R.id.company);
 		EditText editSeeking = (EditText) findViewById(R.id.seeking);
-		EditText editTimeIn = (EditText) findViewById(R.id.time_in);
-		EditText editTimeOut = (EditText) findViewById(R.id.time_out);
 
 		// Clear entered in information
 		editName.setText("");
 		editCompany.setText("");
 		editSeeking.setText("");
-		editTimeIn.setText("");
-		editTimeOut.setText("");
 	}
 
 	@SuppressLint("SimpleDateFormat")
@@ -92,20 +152,14 @@ public class MainActivity extends Activity
 		EditText editSeeking = (EditText) findViewById(R.id.seeking);
 		String seeking = editSeeking.getText().toString();
 
-		EditText editTimeIn = (EditText) findViewById(R.id.time_in);
-		String time_in = editTimeIn.getText().toString();
+		String time_in = new SimpleDateFormat("MMM-dd-yyyy h:mm aa").format(Calendar.getInstance().getTime());
 
-		EditText editTimeOut = (EditText) findViewById(R.id.time_out);
-		String time_out = editTimeOut.getText().toString();
-
-		String currentTime = new SimpleDateFormat("MMM-dd-yy HH:mm:ss").format(Calendar.getInstance().getTime());
-
-		SignIn sign_in = new SignIn(name, company, seeking, time_in, time_out, currentTime);
+		SignIn sign_in = new SignIn(name, company, seeking, time_in, "NULL");
 
 		datasource.createSignIn(sign_in);
 
 		showDialog("You have successfully signed in.", context);
-
+				
 		// Clear entered in information
 		clearForm();
 
@@ -130,7 +184,7 @@ public class MainActivity extends Activity
 		if (Util.isExternalStorageWritable())
 		{
 			File file = new File(Environment.getExternalStorageDirectory().getPath() + "/SonySignIns/", "records.csv");
-			
+
 			if (file.exists())
 			{
 				file.delete();
@@ -143,6 +197,9 @@ public class MainActivity extends Activity
 
 				String allRecords = "";
 
+				// Row defining each column
+				allRecords += "Name, Company, Seeking, Time In, Time Out\n";
+
 				ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
 				for (int i = 0; i < sign_ins.size(); i++)
 				{
@@ -151,7 +208,6 @@ public class MainActivity extends Activity
 					allRecords += sign_ins.get(i).getSeeking() + ",";
 					allRecords += sign_ins.get(i).getTimeIn() + ",";
 					allRecords += sign_ins.get(i).getTimeOut() + ",";
-					allRecords += sign_ins.get(i).getCurrent() + "\n";
 				}
 
 				fWriter.write(allRecords);
@@ -165,7 +221,7 @@ public class MainActivity extends Activity
 			}
 
 			// MY CODE HURR
-			
+
 			Uri u1 = null;
 			u1 = Uri.fromFile(file);
 
@@ -178,6 +234,99 @@ public class MainActivity extends Activity
 			startActivity(sendIntent);
 		}
 	}
+	
+	public void initTable(TableLayout table)
+	{
+		TableLayout.LayoutParams params1 = 
+				new TableLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.1f);
+		
+		TextView text = new TextView(this);
+        text.setText("Name");
+        text.setLayoutParams(params1);
+        text.setTypeface(null, Typeface.BOLD);
+        
+        TextView text2 = new TextView(this);
+        text2.setText("Company");
+        text2.setLayoutParams(params1);
+        text2.setTypeface(null, Typeface.BOLD);
+        
+        TextView text3 = new TextView(this);
+        text3.setText("Seeking");
+        text3.setLayoutParams(params1);
+        text3.setTypeface(null, Typeface.BOLD);
+        
+        TextView text4 = new TextView(this);
+        text4.setText("Time In");
+        text4.setLayoutParams(params1);
+        text4.setTypeface(null, Typeface.BOLD);
+        
+        TextView text5 = new TextView(this);
+        text5.setText("Time Out");
+        text5.setLayoutParams(params1);
+        text5.setTypeface(null, Typeface.BOLD);
+        
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.addView(text);
+        layout.addView(text2);
+        layout.addView(text3);
+		layout.addView(text4);
+		layout.addView(text5);
+		
+		// add the TableRow to the TableLayout
+		table.addView(layout);
+	}
+
+	public void viewTable(View view)
+	{
+		setContentView(R.layout.view_data);
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		revert = "admin";
+
+		// get a reference for the TableLayout
+		TableLayout table = (TableLayout) findViewById(R.id.my_table_layout);
+		
+		initTable(table);
+
+		ArrayList<SignIn> sign_ins = datasource.getAllSignIns();
+		for (int i = 0; i < sign_ins.size(); i++)
+		{
+			TableLayout.LayoutParams params1 = 
+					new TableLayout.LayoutParams(0, LayoutParams.WRAP_CONTENT, 0.1f);
+	 
+	        TextView text = new TextView(this);
+	        text.setText(sign_ins.get(i).getName());
+	        text.setLayoutParams(params1);
+	        
+	        TextView text2 = new TextView(this);
+	        text2.setText(sign_ins.get(i).getCompany());
+	        text2.setLayoutParams(params1);
+	        
+	        TextView text3 = new TextView(this);
+	        text3.setText(sign_ins.get(i).getSeeking());
+	        text3.setLayoutParams(params1);
+	        
+	        TextView text4 = new TextView(this);
+	        text4.setText(sign_ins.get(i).getTimeIn());
+	        text4.setLayoutParams(params1);
+	        
+	        TextView text5 = new TextView(this);
+	        text5.setText(sign_ins.get(i).getTimeOut());
+	        text5.setLayoutParams(params1);
+	        
+	        LinearLayout layout = new LinearLayout(this);
+	        layout.setOrientation(LinearLayout.HORIZONTAL);
+	        layout.setPadding(0, 10, 0, 10);
+	        layout.addView(text);
+	        layout.addView(text2);
+	        layout.addView(text3);
+			layout.addView(text4);
+			layout.addView(text5);
+	        
+			// add the TableRow to the TableLayout
+			table.addView(layout);
+		}
+	}
 
 	public void deleteAll(View view)
 	{
@@ -185,7 +334,7 @@ public class MainActivity extends Activity
 		showDialog("You have successfully deleted all stored records.", context);
 	}
 
-	public void Admin(View view)
+	public void admin(View view)
 	{
 		setContentView(R.layout.admin);
 	}
@@ -193,5 +342,73 @@ public class MainActivity extends Activity
 	public void switchBack(View view)
 	{
 		setContentView(R.layout.activity_main);
+	}
+	
+	public void checkOut(View view)
+	{
+		// Enable back button
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+
+		String[] tableColumns = datasource.allColumns;
+		String whereClause = MySQLiteHelper.COLUMN_TIMEOUT + " = ?";
+		String[] whereArgs = new String[] { "NULL" };
+		String orderBy = MySQLiteHelper.COLUMN_TIMEIN;
+
+		// Set variable so we know how to redirect when back button is pressed
+		revert = "main";
+		
+		// Go to list view page
+		setContentView(R.layout.checkout);
+
+		final ListView listview = (ListView) findViewById(R.id.listview);
+
+		final ArrayList<SignIn> signins = datasource.runQuery(tableColumns, whereClause, whereArgs, orderBy);
+		list = new ArrayList<String>();
+		for (int i = 0; i < signins.size(); ++i)
+		{
+			String insert = "\nName: " + signins.get(i).getName() + "\n";
+			insert += "Seeking: " + signins.get(i).getSeeking() + "\n";
+			insert += "Company: " + signins.get(i).getCompany() + "\n";
+			insert += "Sign in time: " + signins.get(i).getTimeIn() + "\n";
+			list.add(insert);
+		}
+		
+		adapter = new StableArrayAdapter(this, android.R.layout.simple_list_item_1, list);
+		listview.setAdapter(adapter);
+
+		listview.setOnItemClickListener(new OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> parent, final View view, int position, long id)
+			{
+				final String item = (String) parent.getItemAtPosition(position);
+				SignIn signin = Util.parseData(item);
+				String message = "Are you sure you want to check out for " + signin.getName();
+				message += " who came in to see " + signin.getSeeking() + " and represents " + signin.getCompany() + "?";
+				showConfirmationDialog(message, context, view, item);
+			}
+		});
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case android.R.id.home:
+				if (revert.equals("admin"))
+				{
+					setContentView(R.layout.admin);
+				}
+				if (revert.equals("main"))
+				{
+					setContentView(R.layout.activity_main);
+				}
+				getActionBar().setDisplayHomeAsUpEnabled(false);
+				break;
+			default:
+				break;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 }
